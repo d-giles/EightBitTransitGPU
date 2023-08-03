@@ -2,7 +2,7 @@
 
 __author__ = """Daniel Giles"""
 __email__ = 'daniel.k.giles@gmail.com'
-__version__ = '2.0.4'
+__version__ = '2.0.5'
 
 from .cGridFunctions import *
 from .misc import *
