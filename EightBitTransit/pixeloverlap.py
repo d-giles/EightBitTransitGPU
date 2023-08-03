@@ -704,7 +704,7 @@ norm_area = overlap(0.96, 0.0, 0.1, verbose=False)
 p = positions(n=10, m=10, t=np.arange(10, dtype=float), tref=5., v=1.)
 
 try:
-    xs = np.array(0.96*100, dtype=np.float32)
+    xs = np.array([0.96]*100, dtype=np.float32)
     ys = np.zeros(100, dtype=np.float32)
     ws = np.array([.1]*100, dtype=np.float32)
     norm_area = overlap_gpu(xs, ys, ws, False)
