@@ -662,7 +662,7 @@ def overlap(x0, y0, w, verbose=False):
             rght_chord = abs(xg3-xg2)
             rght_carea = chord_area(rght_chord)
             bott_chord = abs(yg5-yg4)
-            bott_carea = chord_area(left_chord)
+            bott_carea = chord_area(bott_chord)
 
             area = PI - (top__carea + rght_carea + bott_carea)
     if n_intersections == 8:
