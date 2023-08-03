@@ -1,11 +1,8 @@
 # to run: python setup.py build_ext --inplace
 from setuptools import setup, find_packages
 
-with open('README.rst') as readme_file:
+with open('README.md') as readme_file:
     readme = readme_file.read()
-
-with open('HISTORY.rst') as history_file:
-    history = history_file.read()
 
 requirements = ["matplotlib", "numpy", "scipy",
                 "imageio", "numba", "jupyterlab"]
@@ -21,7 +18,8 @@ setup(name='EightBitTransit',
       license='MIT',
       packages=find_packages(include=['EightBitTransit', 'EightBitTransit.*']),
       install_requires=requirements,
-      long_description=readme + '\n\n' + history,
+      long_description=readme,
+      long_description_content_type='text/markdown',
       include_package_data=True,
       test_suite='tests',
       tests_require=test_requirements,
