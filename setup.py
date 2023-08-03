@@ -1,32 +1,30 @@
 # to run: python setup.py build_ext --inplace
-#from setuptools import setup,Extension
-import numpy as np
-from distutils.core import setup
-from distutils.extension import Extension
-from Cython.Build import cythonize
+from setuptools import setup, find_packages
 
-#setup(ext_modules=cythonize('EightBitTransit/cGridFunctions.pyx'))
-#setup(ext_modules=cythonize('EightBitTransit/cTransitingImage.pyx'))
-#setup(ext_modules=cythonize('EightBitTransit/misc.pyx'))
-#setup(ext_modules=cythonize('EightBitTransit/deprecated.pyx'),include_dirs=[np.get_include()])
-#setup(ext_modules=cythonize('EightBitTransit/inversion.pyx'),include_dirs=[np.get_include()])
+with open('README.rst') as readme_file:
+    readme = readme_file.read()
 
-extensions = [
-			Extension('EightBitTransit.cGridFunctions',['EightBitTransit/cGridFunctions.pyx']),
-			Extension('EightBitTransit.cTransitingImage',['EightBitTransit/cTransitingImage.pyx']),
-			Extension('EightBitTransit.misc',['EightBitTransit/misc.pyx']),
-			Extension('EightBitTransit.inversion',['EightBitTransit/inversion.pyx'],include_dirs=[np.get_include()])
-]
+with open('HISTORY.rst') as history_file:
+    history = history_file.read()
 
+requirements = ["matplotlib", "numpy", "scipy",
+                "imageio", "numba", "jupyterlab"]
+
+test_requirements = []
 
 setup(name='EightBitTransit',
-      version='1.0',
       description='Shadow imaging of transiting objects',
-      author='Emily Sandford',
-      author_email='es835@cam.ac.uk',
-      url='https://github.com/esandford/EightBitTransit',
+      python_requires='>=3.6',
+      author='Daniel Giles (Orig. Emily Sandford)',
+      author_email='daniel.k.giles@gmail.com',
+      url='https://github.com/d-giles/EightBitTransitGPU',
       license='MIT',
-      packages=['EightBitTransit'],
-      include_dirs=[np.get_include()],
-      #install_requires=['numpy','matplotlib','warnings','scipy','copy','math','itertools','collections'],
-      ext_modules=cythonize(extensions))
+      packages=find_packages(include=['EightBitTransit', 'EightBitTransit.*']),
+      install_requires=requirements,
+      long_description=readme + '\n\n' + history,
+      include_package_data=True,
+      test_suite='tests',
+      tests_require=test_requirements,
+      version='1.0.1',
+      zip_safe=False,
+      )

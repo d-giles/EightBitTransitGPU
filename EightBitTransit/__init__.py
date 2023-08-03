@@ -1,6 +1,10 @@
-__all__ = ['cTransitingImage','cGridFunctions','misc','inversion']
+#__all__ = ['cTransitingImage','cGridFunctions','misc','inversion']
 
-from .cTransitingImage import *
+__author__ = """Daniel Giles"""
+__email__ = 'daniel.k.giles@gmail.com'
+__version__ = '1.0.1'
+
 from .cGridFunctions import *
 from .misc import *
 from .inversion import *
+from .TransitingImageGpu import *
