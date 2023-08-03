@@ -25,6 +25,6 @@ setup(name='EightBitTransit',
       include_package_data=True,
       test_suite='tests',
       tests_require=test_requirements,
-      version='2.0.1',
+      version='2.0.2',
       zip_safe=False,
       )
