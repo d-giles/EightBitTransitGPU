@@ -697,7 +697,7 @@ except NvvmSupportError:
         areas = np.zeros_like(x0)
         for ind, x in enumerate(x0):
             areas[ind] = overlap(x, y0[ind], w[ind], False)
-        return overlap(x0, y0, w, verbose)
+        return areas
 
 # initialize the cuda implementations of the functions.
 norm_area = overlap(0.96, 0.0, 0.1, verbose=False)
