@@ -694,7 +694,7 @@ except NvvmSupportError:
     Initializing EightBitTransit *without* gpu multiprocessing.
     """)
     def overlap_gpu(x0_arr, y0_arr, w, verbose=False):
-        areas = np.zeros_like(x0)
+        areas = np.zeros_like(x0_arr)
         for ind, x in enumerate(x0_arr):
             y = y0_arr[ind]
             areas[ind] = overlap(x, y, w, verbose)
