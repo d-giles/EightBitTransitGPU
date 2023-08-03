@@ -113,8 +113,8 @@ def overlap(x0, y0, w, verbose=False):
     n_intersections = int(0)
 
     def test(x, y):
-        cond1 = (round(abs(x-x0), 10) <= round(0.5*w, 10))
-        cond2 = (round(abs(y-y0), 10) <= round(0.5*w, 10))
+        cond1 = (np.float32(abs(x-x0)) <= np.float32(0.5*w))
+        cond2 = (np.float32(abs(y-y0)) <= np.float32(0.5*w))
         return cond1 and cond2
 
     # calculate coordinates of intersection solutions
