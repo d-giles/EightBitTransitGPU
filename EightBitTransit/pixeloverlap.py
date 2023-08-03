@@ -696,7 +696,7 @@ except NvvmSupportError:
     def overlap_gpu(x0, y0, w, verbose=False):
         areas = np.zeros_like(x0)
         for ind, x in enumerate(x0):
-            areas[ind] = overlap(x, y0[ind], w, False)
+            areas[ind] = overlap(x, y0[ind], w[ind], False)
         return overlap(x0, y0, w, verbose)
 
 # initialize the cuda implementations of the functions.
