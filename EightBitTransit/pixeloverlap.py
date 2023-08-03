@@ -693,10 +693,11 @@ except NvvmSupportError:
 
     Initializing EightBitTransit *without* gpu multiprocessing.
     """)
-    def overlap_gpu(x0, y0, w, verbose=False):
+    def overlap_gpu(x0_arr, y0_arr, w, verbose=False):
         areas = np.zeros_like(x0)
-        for ind, x in enumerate(x0):
-            areas[ind] = overlap(x, y0[ind], w[ind], False)
+        for ind, x in enumerate(x0_arr):
+            y = y0_arr[ind]
+            areas[ind] = overlap(x, y, w, verbose)
         return areas
 
 # initialize the cuda implementations of the functions.
@@ -706,8 +707,8 @@ p = positions(n=10, m=10, t=np.arange(10, dtype=float), tref=5., v=1.)
 try:
     xs = np.array([0.96]*100, dtype=np.float32)
     ys = np.zeros(100, dtype=np.float32)
-    ws = np.array([.1]*100, dtype=np.float32)
-    norm_area = overlap_gpu(xs, ys, ws, False)
+    w  = np.float32(0.1)
+    norm_area = overlap_gpu(xs, ys, w, False)
 except CudaSupportError:
     # check if there's a gpu with supported drivers
 
