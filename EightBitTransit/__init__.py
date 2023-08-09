@@ -8,3 +8,4 @@ from .cGridFunctions import *
 from .misc import *
 from .inversion import *
 from .TransitingImageGpu import *
+from .eightbitref import *
