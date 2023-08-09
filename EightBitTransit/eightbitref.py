@@ -1,7 +1,8 @@
 import numpy as np
-from EightBitTransit.TransitingImageGpu import TransitingImage
-from cGridFunctions import pixelate_image, lowres_grid
+from .TransitingImageGpu import TransitingImage
+from .cGridFunctions import pixelate_image, lowres_grid
 from numba import jit  # makes things faster
+__all__ = ["scale_transit", "signal_fit", "transit_model"]
 
 
 @jit(nopython=True)
@@ -77,9 +78,9 @@ class transit_model(TransitingImage):
         if "imfile" in kwargs:
             opacitymat = pixelate_image(
                 imfile=kwargs["imfile"],
-                nside=kwargs["lowres"],
-                method=kwargs["lowrestype"],
-                rounding=kwargs["lowresround"]
+                nside=lowres,
+                method=lowrestype,
+                rounding=lowresround
             )
         elif (("opacitymat" in kwargs) and (lowres is not None)):
             opacitymat = lowres_grid(
@@ -117,7 +118,7 @@ class transit_model(TransitingImage):
         )
 
     def gen_ref_LC(self):
-        self.ref_LC, _ = self.gen_LC()
+        self.ref_LC, _ = self.gen_LC(t_arr=self.t_arr)
         return self.ref_LC
 
     def signal_fit(self, times, width, depth, tref):
