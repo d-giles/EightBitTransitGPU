@@ -2,6 +2,8 @@
 History
 =======
 1.0.1 (2023-07-26)
+...
+2.0.7 (2023-08-04)
 ------------------
 
-* First release on PyPI.
+* 2.0.7 - First release on PyPI.
