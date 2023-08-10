@@ -1,8 +1,10 @@
 import numpy as np
-from .TransitingImageGpu import TransitingImage
+from .TransitingImage import TransitingImage
 from .cGridFunctions import pixelate_image, lowres_grid
+from .mats import CIRCLEMAT
 from numba import jit  # makes things faster
-__all__ = ["scale_transit", "signal_fit", "transit_model"]
+from warnings import warn
+__all__ = ["scale_transit", "signal_fit", "TransitModel", "CircleTransit"]
 
 
 @jit(nopython=True)
@@ -13,7 +15,7 @@ def scale_transit(model, trange, depth):
     A depth of 0.4 will result in a transit with a minimum flux of 1-0.4
 
     The result of this function will return an array of flux values for a dip
-    placed at a given trange. 
+    placed at a given trange.
     """
     # Generating a reference signal
     model_invert = 1-model  # invert to scale depth of transit
@@ -53,12 +55,19 @@ def signal_fit(model, times, width, depth, tref):
     return signal
 
 
-class transit_model(TransitingImage):
+# initialize above functions
+signal_fit(np.array([1., 1., 1., 0.5, 0., 0.5, 1., 1., 1.]),
+           np.linspace(0., 1., 8),
+           0.3,
+           0.3,
+           0.5)
+
+
+class TransitModel(TransitingImage):
     def __init__(self,
                  lowres=None,
                  lowrestype="mean",  # or: "mode",
                  lowresround=False,  # or: True,
-                 opacitymat=None,
                  LDlaw="uniform",  # or: "linear","quadratic","nonlinear",
                  LDCs=None,
                  positions=None,
@@ -68,12 +77,10 @@ class transit_model(TransitingImage):
                  **kwargs):
         # check for required kwargs
         if not (("imfile" in kwargs) or ("opacitymat" in kwargs)):
-            raise Exception(
-                """
-                Must initialize TransitingImage object with either imfile or
-                opacitymat
-                """
-            )
+            raise Exception("""
+    Must initialize TransitingImage object with either imfile or
+    opacitymat
+                            """)
 
         if "imfile" in kwargs:
             opacitymat = pixelate_image(
@@ -90,6 +97,8 @@ class transit_model(TransitingImage):
                 method=lowrestype,
                 rounding=lowresround
             )
+        else:
+            opacitymat = kwargs["opacitymat"]
         # init such that the image should transit head to tail in 1 day
         if "v" not in kwargs:
             width = opacitymat.shape[1]  # in pixels
@@ -117,9 +126,57 @@ class transit_model(TransitingImage):
             t_arr=t_arr
         )
 
-    def gen_ref_LC(self):
-        self.ref_LC, _ = self.gen_LC(t_arr=self.t_arr)
+    def gen_ref_lc(self, gpu=False):
+        """Generates a reference light curve with ~1000 datapoints
+
+        The model is scaled so that the min flux is 0 and the max is 1.
+
+        Note: If the default calculated variables failed to capture the whole
+        transit, the maxm may not be 1.
+        """
+        ref_LC, _ = self.gen_LC(t_arr=self.t_arr, gpu=gpu)
+        model_invert = 1-ref_LC  # invert to scale depth of transit
+        model_invert = model_invert*(1/max(model_invert))  # scale 0 to 1
+        self.ref_LC = 1-model_invert
+        if (min(self.ref_LC) != 0) or (max(self.ref_LC) != 1):
+            warn(f"""
+    Warning: The reference LC does not have the expected flux range.
+    Min flux: {min(self.ref.LC):.3}, Max flux: {max(self.ref.LC):.3}
+            """)
         return self.ref_LC
 
     def signal_fit(self, times, width, depth, tref):
         return signal_fit(self.ref_LC, times, width, depth, tref)
+
+    def show_model(self):
+        if "plt" not in dir():
+            import matplotlib.pyplot as plt
+        try:
+            fig, ax = plt.subplots(2,
+                                   figsize=(6, 8),
+                                   gridspec_kw={"height_ratios": [1, 1]},
+                                   tight_layout=True)
+            ax[0].imshow(self.opacitymat, cmap="Greys")
+            ax[0].set_title("Reference shape");
+            ax[0].set_xlabel("Pixel j");
+            ax[0].set_ylabel("Pixel i");
+
+            ax[1].plot(self.ref_LC)
+            ax[1].set_title("Reference signal");
+            ax[1].set_xlabel("Time step (unitless)");
+            ax[1].set_ylabel("Normalized Flux (unitless)");
+
+            plt.show()
+        except AttributeError:
+            print("""
+    Reference light curve not yet generated.
+    Call `model.gen_ref_lc()`.
+            """)
+        return
+
+
+class CircleTransit(TransitModel):
+    def __init__(self, gpu=False):
+        opacitymat = CIRCLEMAT
+        super().__init__(opacitymat=opacitymat)
+        _ = self.gen_ref_lc(gpu=gpu)

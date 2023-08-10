@@ -6,7 +6,7 @@ import copy
 import math
 import itertools
 
-from .TransitingImageGpu import *
+from .TransitingImage import TransitingImage
 from .cGridFunctions import *
 from .misc import *
 from .pixeloverlap import positions

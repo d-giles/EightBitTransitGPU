@@ -41,5 +41,8 @@ from .inversion import (
     get_overlap_time_mask,
     unfold_opacity_map
 )
-from .TransitingImageGpu import TransitingImage
-from .eightbitref import scale_transit, signal_fit, transit_model
+from .TransitingImage import TransitingImage
+from .transitmodel import scale_transit, signal_fit, TransitModel, CircleTransit
+from .mats import CIRCLEMAT
+from .pixeloverlap import positions, chord_area, numpy_sign, overlap, pixel_overlap, initialize
+initialize(gpu=False)

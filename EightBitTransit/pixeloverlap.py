@@ -1,7 +1,8 @@
 import math
 import numpy as np
+from warnings import warn
 from numba import jit, vectorize, boolean
-from numba.cuda import select_device, CudaSupportError
+from numba.cuda import CudaSupportError
 from numba.cuda.cudadrv.nvvm import NvvmSupportError
 
 SQRT2 = np.float32(2**0.5)
@@ -678,46 +679,44 @@ def overlap(x0, y0, w, verbose=False):
         left_carea = chord_area(left_chord)
         area = PI - (top__carea + rght_carea + bott_carea + left_carea)
         pass
-    norm_area = area/PI # normalize by stellar area, which is pi*1**2
+    norm_area = area/PI  # normalize by stellar area, which is pi*1**2
     return norm_area
 
 
-try:
-    @vectorize(['float32(float32, float32, float32, boolean)'], target='cuda')
-    def overlap_gpu(x0, y0, w, verbose=False):
-        return overlap(x0, y0, w, verbose)
-except NvvmSupportError:
-    print("""
-    NvvmSupportError: libNVVM cannot be found. Do `conda install cudatoolkit`:
-    libnvvm.so: cannot open shared object file: No such file or directory
+@jit
+def pixel_overlap(x0_arr, y0_arr, w, verbose=False):
+    areas = np.zeros_like(x0_arr)
+    for ind, x in enumerate(x0_arr):
+        y = y0_arr[ind]
+        areas[ind] = overlap(x, y, w, verbose)
+    return areas
 
-    Initializing EightBitTransit *without* gpu multiprocessing.
-    """)
-    def overlap_gpu(x0_arr, y0_arr, w, verbose=False):
-        areas = np.zeros_like(x0_arr)
-        for ind, x in enumerate(x0_arr):
-            y = y0_arr[ind]
-            areas[ind] = overlap(x, y, w, verbose)
-        return areas
 
-# initialize the cuda implementations of the functions.
-norm_area = overlap(0.96, 0.0, 0.1, verbose=False)
-p = positions(n=10, m=10, t=np.arange(10, dtype=float), tref=5., v=1.)
-
-try:
+def initialize(gpu=False):
+    # initialize the cuda implementations of the functions.
     xs = np.array([0.96]*100, dtype=np.float32)
     ys = np.zeros(100, dtype=np.float32)
-    w  = np.float32(0.1)
-    norm_area = overlap_gpu(xs, ys, w, False)
-except CudaSupportError:
-    # check if there's a gpu with supported drivers
+    w = np.float32(0.1)
+    if gpu:
+        from .gpu_methods import pixel_overlap_gpu
+        try:
+            pixel_overlap_gpu(xs, ys, w, False)
+        except CudaSupportError:
+            # check if there's a gpu with supported drivers
 
-    print("""
-    CUDA driver library cannot be found.
-    If you are sure that a CUDA driver is installed,
-    try setting environment variable NUMBA_CUDA_DRIVER
-    with the file path of the CUDA driver shared library.
-    
-    Initializing EightBitTransit *without* gpu multiprocessing.
-    """)
-    pass
+            warn("""
+            CUDA driver library cannot be found.
+            If you are sure that a CUDA driver is installed,
+            try setting environment variable NUMBA_CUDA_DRIVER
+            with the file path of the CUDA driver shared library.
+
+            Initializing EightBitTransit *without* gpu multiprocessing.
+            """)
+            pass
+        pass
+    else:
+        overlap(xs[0], ys[0], w, verbose=False)
+        positions(n=10, m=10, t=np.arange(10, dtype=float), tref=5., v=1.)
+        pixel_overlap(xs, ys, w, False)
+        pass
+
