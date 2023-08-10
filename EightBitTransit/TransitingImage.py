@@ -3,19 +3,20 @@ import numpy as np
 import matplotlib.pyplot as plt
 import warnings
 from .cGridFunctions import pixelate_image, lowres_grid, LDfluxsmall
-from .pixeloverlap import positions, overlap, overlap_gpu
+from .pixeloverlap import positions, pixel_overlap, initialize
+initialize()
 __all__ = ['TransitingImage']
 
 
 class TransitingImage(object):
     def __init__(self, **kwargs):
-        #all initial values are None
+        # all initial values are None
         self.imfile = None
         self.lowres = None
-        self.lowrestype = "mean" #also allowed: "mode"
-        self.lowresround = False #also allowed: True
+        self.lowrestype = "mean"  # also allowed: "mode"
+        self.lowresround = False  # also allowed: True
         self.opacitymat = None
-        self.LDlaw = "uniform" #also allowed: "linear","quadratic","nonlinear"
+        self.LDlaw = "uniform"  # also allowed: "linear","quadratic","nonlinear"
         self.LDCs = None
         self.positions = None
         self.areas = None
@@ -153,7 +154,15 @@ class TransitingImage(object):
                 v=self.v
             )
 
-    def gen_LC(self, t_arr):
+    def gen_LC(self, t_arr, gpu=False):
+        if gpu:
+            from .gpu_methods import pixel_overlap_gpu
+            pixel_overlap_func = pixel_overlap_gpu
+            initialize(gpu)
+            pass
+        else:
+            pixel_overlap_func = pixel_overlap
+
         # updates self.t_arr if the passed t_arr is different
         gridshape = np.shape(self.opacitymat)
         if ~np.all(t_arr == self.t_arr):
@@ -169,22 +178,25 @@ class TransitingImage(object):
 
         if self.LDlaw == "uniform":
             if self.areas is None:
-                 self.areas = np.zeros((len(t_arr), gridshape[0], gridshape[1]),
-                                  dtype=float)
+                self.areas = np.zeros((len(t_arr), gridshape[0], gridshape[1]),
+                                      dtype=float)
 
             self.blockedflux = np.zeros((len(t_arr), gridshape[0], gridshape[1]),
-                                   dtype=float)
+                                        dtype=float)
 
             if np.count_nonzero(self.areas) == 0:
-                x0 =  self.positions[:, :, :, 0]
-                x0_1d = x0.reshape((x0.shape[0]*x0.shape[1]*x0.shape[2])).astype(np.float32)
+                x0 = self.positions[:, :, :, 0]
+                x0_1d = x0.reshape(
+                    (x0.shape[0]*x0.shape[1]*x0.shape[2])).astype(np.float32)
 
-                y0 =  self.positions[:, :, :, 1]
-                y0_1d = y0.reshape((y0.shape[0]*y0.shape[1]*y0.shape[2])).astype(np.float32)
+                y0 = self.positions[:, :, :, 1]
+                y0_1d = y0.reshape(
+                    (y0.shape[0]*y0.shape[1]*y0.shape[2])).astype(np.float32)
 
-                w =  self.w
-                self.areas = overlap_gpu(x0_1d, y0_1d, w, False)
-                self.areas = self.areas.reshape((x0.shape[0], x0.shape[1], x0.shape[2]))
+                w = self.w
+                self.areas = pixel_overlap_func(x0_1d, y0_1d, w, False)
+                self.areas = self.areas.reshape(
+                    (x0.shape[0], x0.shape[1], x0.shape[2]))
 
                 self.blockedflux = self.areas*self.opacitymat
                 # for i in range(0, gridshape[0]):
@@ -212,16 +224,20 @@ class TransitingImage(object):
 
         elif self.LDlaw in ["nonlinear", "linear", "quadratic"]:
             if self.w > 0.2:
-                warnings.warn("Small-planet approximation for LD calculation is inappropriate. Choose higher N if possible.")
-            x0 =  self.positions[:, :, :, 0]
-            x0_1d = x0.reshape((x0.shape[0]*x0.shape[1]*x0.shape[2])).astype(np.float32)
+                warnings.warn(
+                    "Small-planet approximation for LD calculation is inappropriate. Choose higher N if possible.")
+            x0 = self.positions[:, :, :, 0]
+            x0_1d = x0.reshape(
+                (x0.shape[0]*x0.shape[1]*x0.shape[2])).astype(np.float32)
 
-            y0 =  self.positions[:, :, :, 1]
-            y0_1d = y0.reshape((y0.shape[0]*y0.shape[1]*y0.shape[2])).astype(np.float32)
+            y0 = self.positions[:, :, :, 1]
+            y0_1d = y0.reshape(
+                (y0.shape[0]*y0.shape[1]*y0.shape[2])).astype(np.float32)
 
-            w =  self.w
-            self.areas = overlap_gpu(x0_1d, y0_1d, w, False)
-            self.areas = self.areas.reshape((x0.shape[0], x0.shape[1], x0.shape[2]))
+            w = self.w
+            self.areas = pixel_overlap_func(x0_1d, y0_1d, w, False)
+            self.areas = self.areas.reshape(
+                (x0.shape[0], x0.shape[1], x0.shape[2]))
             self.blockedflux = self.areas*self.opacitymat
 
             self.LD = np.zeros_like(self.areas)
