@@ -1,14 +1,15 @@
 # README #
 
 This version of `EightBitTransit` is an MIT-licensed python code redesigned to make use of GPU parallelization with Numba:
-1. Can calculate the light curve of any pixelated image transiting a star;
-2. Can invert a light curve to recover the "shadow image" that produced it.
+1. Can calculate the model of any pixelated image transiting a star
+2. Can inject the model into a light curve with a given depth (negative allowed, i.e. a spike) and duration
+3. Can invert a light curve to recover the "shadow image" that produced it. (from original code unmodified).
 
 # Installation #
 
-To install EightBitTransit, download this directory, navigate to it, and run:
+To install EightBitTransit, run:
 
-`pip install .`
+`pip install eightbittransit`
 
 # Dependencies #
 * Numpy
