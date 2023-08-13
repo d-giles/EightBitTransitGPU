@@ -26,6 +26,9 @@ Optionally (for the example notebook):
 
 See `./examples/examples-gpu.ipynb` for examples of both the forward and inverse shadow imaging problem, including for dip 5 of Boyajian's Star. This code reproduces figure 12 of Sandford & Kipping 2018 (https://arxiv.org/abs/1812.01618).
 
+See `/examples
+/eightbit-injection.ipynb` for examples on how to inject a signal into an existing lighr curve.
+
 # Note on memory #
 
 Repeated TransitingImage() calls can cause python to run out of memory in certain cases (thanks to textadactyl for pointing this out!)--when you are done with a TransitingImage object, deallocate it explicitly, i.e.:
